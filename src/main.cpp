@@ -152,7 +152,15 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
 //FUNÇÕES DEFINIDAS PELO ALUNO
 
-glm::vec2 ComputeSquarePathOffset(float time, float L, float speed);
+struct SquarePathState
+{
+    glm::vec2 position; 
+    float     height;   
+    float     yaw;      //referente à rotação do coelho (i.e. para onde ele está olhando)
+};
+
+
+SquarePathState ComputeSquarePathState(float time, float L, float speed);
 
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
@@ -223,8 +231,18 @@ GLint g_surface_type_uniform;
 //VARIÁVEIS DEFINIDAS PELO ALUNO
 
 // Parâmetros para o caminho dos coelhos
-float g_SquarePathSide  = 10.0f; // comprimento do lado do quadrado
-float g_SquarePathSpeed = 3.0f; // velocidade constante (unidades por segundo)
+
+//variáveis globais do mundo
+int bunnyNumber = 1;
+
+
+//variáveis globais do caminho retangular
+float g_SquarePathSide  = 2.0f; // comprimento do lado do quadrado
+float g_SquarePathSpeed = 1.0f; // velocidade constante (unidades por segundo)
+float g_HopHeight = 0.4f;
+
+float pi = 3.14159265f;
+
 
 int main(int argc, char* argv[])
 {
@@ -432,13 +450,15 @@ int main(int argc, char* argv[])
 
         //Pegamos o tempo atual para fazer animação baseada em tempo real
         float current_time = (float)glfwGetTime();
-        glm::vec2 square_offset = ComputeSquarePathOffset(current_time, g_SquarePathSide, g_SquarePathSpeed);
-        for (int i = 0; i < 3; ++i)
+        SquarePathState hop_state = ComputeSquarePathState(current_time, g_SquarePathSide, g_SquarePathSpeed);
+        for (int i = 0; i < bunnyNumber; ++i)
         {
-            model = Matrix_Translate(2.0f * i+square_offset.x,0.0f,square_offset.y);
+
+            model = Matrix_Translate(2.0f * i+hop_state.position.x, hop_state.height, hop_state.position.y) * Matrix_Rotate_Y(hop_state.yaw);;
             glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(g_object_id_uniform, BUNNY);
-            glUniform1i(g_surface_type_uniform, bunny_surfaces[i]);
+            glUniform1i(g_surface_type_uniform, JADE_SURFACE);            
+            //glUniform1i(g_surface_type_uniform, bunny_surfaces[i]);
             DrawVirtualObject("the_bunny");
         }
 
@@ -1515,31 +1535,51 @@ void PrintObjModelInfo(ObjModel* model)
 //FUNÇÕES DEFINIDAS PELO ALUNO
 
 //Dado um valor no tempo, clacula o offset do coelho ao longo do rettângulo
-glm::vec2 ComputeSquarePathOffset(float time, float L, float speed)
+SquarePathState ComputeSquarePathState(float time, float L, float speed)
 {
-    glm::vec2 offset;
+    glm::vec2 position, direction;
     float perimeter = L*4.0f;
+    float t; //porcentagem (0 a 1) do lado atual do quadrado que o coelho já percorreu
 
     float d = fmodf(speed * time, perimeter);
     if (d < 0.0f) d += perimeter;
 
     float half = L / 2.0f;
 
-    if (d < L) {
-        offset = glm::vec2(-half + d, -half);
-    } else if (d < 2*L) {
+    if (d < L) 
+    {
+        position = glm::vec2(-half + d, -half);
+        direction = glm::vec2(1.0f, 0.0f);
+    } 
+    else if (d < 2*L) 
+    {
         d -= L;
-        offset = glm::vec2(half, -half + d);
-    } else if (d < 3*L) {
+        position = glm::vec2(half, -half + d);
+        direction = glm::vec2(0.0f, 1.0f);
+    } 
+    else if (d < 3*L) 
+    {
         d -= 2*L;
-        offset = glm::vec2(half - d, half);
-    } else {
+        position = glm::vec2(half - d, half);
+        direction = glm::vec2(-1.0f, 0.0f);
+    } 
+    else 
+    {
         d -= 3*L;
-        offset = glm::vec2(-half, half - d);
+        position = glm::vec2(-half, half - d);
+        direction = glm::vec2(0.0f, -1.0f);
     }
+    
+    t = d/L;
+    SquarePathState state;
+    state.position = position;
+    //O seno dá a proporção da subida na escala de 0 a hopheight, fazendo o movimento de arco.
+    state.height = g_HopHeight* (pi*t);
+    printf("altura: %f\n", state.height);
+    state.yaw = atan2f(direction.x, direction.y) + pi/2;  
 
 
-    return offset;
+    return state;
 }
 
 
