@@ -150,6 +150,10 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
+//FUNÇÕES DEFINIDAS PELO ALUNO
+
+glm::vec2 ComputeSquarePathOffset(float time, float L, float speed);
+
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
 struct SceneObject
@@ -216,6 +220,12 @@ GLint g_projection_uniform;
 GLint g_object_id_uniform;
 GLint g_surface_type_uniform;
 
+//VARIÁVEIS DEFINIDAS PELO ALUNO
+
+// Parâmetros para o caminho dos coelhos
+float g_SquarePathSide  = 10.0f; // comprimento do lado do quadrado
+float g_SquarePathSpeed = 3.0f; // velocidade constante (unidades por segundo)
+
 int main(int argc, char* argv[])
 {
     // Inicializamos a biblioteca GLFW, utilizada para criar uma janela do
@@ -245,7 +255,7 @@ int main(int argc, char* argv[])
     // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
     // de pixels, e com título "INF01047 ...".
     GLFWwindow* window;
-    window = glfwCreateWindow(800, 600, "INF01047 - Seu Cartao - Seu Nome", NULL, NULL);
+    window = glfwCreateWindow(800, 600, "INF01047 - 00589701 - João Luis Scheffel Koller", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -419,9 +429,13 @@ int main(int argc, char* argv[])
             GOLD_SURFACE,
             BLUE_PLASTIC_SURFACE
         };
+
+        //Pegamos o tempo atual para fazer animação baseada em tempo real
+        float current_time = (float)glfwGetTime();
+        glm::vec2 square_offset = ComputeSquarePathOffset(current_time, g_SquarePathSide, g_SquarePathSpeed);
         for (int i = 0; i < 3; ++i)
         {
-            model = Matrix_Translate(2.0f * i,0.0f,0.0f);
+            model = Matrix_Translate(2.0f * i+square_offset.x,0.0f,square_offset.y);
             glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(g_object_id_uniform, BUNNY);
             glUniform1i(g_surface_type_uniform, bunny_surfaces[i]);
@@ -1497,6 +1511,37 @@ void PrintObjModelInfo(ObjModel* model)
     printf("\n");
   }
 }
+
+//FUNÇÕES DEFINIDAS PELO ALUNO
+
+//Dado um valor no tempo, clacula o offset do coelho ao longo do rettângulo
+glm::vec2 ComputeSquarePathOffset(float time, float L, float speed)
+{
+    glm::vec2 offset;
+    float perimeter = L*4.0f;
+
+    float d = fmodf(speed * time, perimeter);
+    if (d < 0.0f) d += perimeter;
+
+    float half = L / 2.0f;
+
+    if (d < L) {
+        offset = glm::vec2(-half + d, -half);
+    } else if (d < 2*L) {
+        d -= L;
+        offset = glm::vec2(half, -half + d);
+    } else if (d < 3*L) {
+        d -= 2*L;
+        offset = glm::vec2(half - d, half);
+    } else {
+        d -= 3*L;
+        offset = glm::vec2(-half, half - d);
+    }
+
+
+    return offset;
+}
+
 
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
 // vim: set spell spelllang=pt_br :
