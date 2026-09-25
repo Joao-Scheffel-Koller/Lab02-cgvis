@@ -157,6 +157,7 @@ struct SquarePathState
     glm::vec2 position; 
     float     height;   
     float     yaw;      //referente à rotação do coelho (i.e. para onde ele está olhando)
+    float pitch; // Inclinação baseado na subida e descida do movimento de arco
 };
 
 
@@ -233,15 +234,19 @@ GLint g_surface_type_uniform;
 // Parâmetros para o caminho dos coelhos
 
 //variáveis globais do mundo
-int bunnyNumber = 1;
+int bunnyNumber = 20;
 
 
 //variáveis globais do caminho retangular
-float g_SquarePathSide  = 2.0f; // comprimento do lado do quadrado
+float g_SquarePathSide  = 20.0f; // comprimento do lado do quadrado
 float g_SquarePathSpeed = 1.0f; // velocidade constante (unidades por segundo)
-float g_HopHeight = 0.4f;
+float g_HopHeight = 1.4f;
 
 float pi = 3.14159265f;
+
+float perimeter = 4.0f * g_SquarePathSide;
+float total_lap_time = perimeter / g_SquarePathSpeed;
+float bunnyTimeLag = total_lap_time / bunnyNumber;
 
 
 int main(int argc, char* argv[])
@@ -450,11 +455,13 @@ int main(int argc, char* argv[])
 
         //Pegamos o tempo atual para fazer animação baseada em tempo real
         float current_time = (float)glfwGetTime();
-        SquarePathState hop_state = ComputeSquarePathState(current_time, g_SquarePathSide, g_SquarePathSpeed);
+        
+ 
         for (int i = 0; i < bunnyNumber; ++i)
         {
-
-            model = Matrix_Translate(2.0f * i+hop_state.position.x, hop_state.height, hop_state.position.y) * Matrix_Rotate_Y(hop_state.yaw);;
+            float bunny_time = current_time - i * bunnyTimeLag;
+            SquarePathState hop_state = ComputeSquarePathState(bunny_time, g_SquarePathSide, g_SquarePathSpeed);
+            model = Matrix_Translate(hop_state.position.x, hop_state.height, hop_state.position.y) * Matrix_Rotate_Y(hop_state.yaw) * Matrix_Rotate_Z(hop_state.pitch);
             glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(g_object_id_uniform, BUNNY);
             glUniform1i(g_surface_type_uniform, JADE_SURFACE);            
@@ -1574,9 +1581,10 @@ SquarePathState ComputeSquarePathState(float time, float L, float speed)
     SquarePathState state;
     state.position = position;
     //O seno dá a proporção da subida na escala de 0 a hopheight, fazendo o movimento de arco.
-    state.height = g_HopHeight* (pi*t);
-    printf("altura: %f\n", state.height);
-    state.yaw = atan2f(direction.x, direction.y) + pi/2;  
+    state.height = g_HopHeight* sinf(pi*t);
+    printf("pi: %f\n", pi);
+    state.yaw = atan2f(direction.x, direction.y) + pi/2;
+    state.pitch    = atanf( (g_HopHeight * 3.141592f * cosf(3.141592f * t)) / L );  
 
 
     return state;
