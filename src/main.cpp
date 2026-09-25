@@ -152,7 +152,7 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
 //FUNÇÕES DEFINIDAS PELO ALUNO
 
-struct SquarePathState
+struct PathState
 {
     glm::vec2 position; 
     float     height;   
@@ -161,7 +161,9 @@ struct SquarePathState
 };
 
 
-SquarePathState ComputeSquarePathState(float time, float L, float speed);
+PathState ComputeRectanglePathState(float time, float width, float depth, float speed);
+PathState ComputeRhombusPathState(float time, float diagX, float diagZ, float speed, float hopHeight);
+PathState ComputeCirclePathState(float time, float radius, float speed, float hopHeight, int numHops);
 
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
@@ -234,19 +236,34 @@ GLint g_surface_type_uniform;
 // Parâmetros para o caminho dos coelhos
 
 //variáveis globais do mundo
-int bunnyNumber = 20;
+int squareBunnyNumber = 24;
+int circleBunnyNumber = 8;
+int rhombusBunnyNumber = 14;
 
 
 //variáveis globais do caminho retangular
-float g_SquarePathSide  = 20.0f; // comprimento do lado do quadrado
-float g_SquarePathSpeed = 1.0f; // velocidade constante (unidades por segundo)
+///ratio: 1,4
+float squareWidth = 15.0f;
+float squareDepth = 21.0f;
+float g_SquarePathSpeed = 1.0f; 
 float g_HopHeight = 1.4f;
 
 float pi = 3.14159265f;
 
-float perimeter = 4.0f * g_SquarePathSide;
+float perimeter = (2.0f * squareWidth) + (2.0f * squareDepth);
 float total_lap_time = perimeter / g_SquarePathSpeed;
-float bunnyTimeLag = total_lap_time / bunnyNumber;
+float bunnyTimeLag = total_lap_time / squareBunnyNumber;
+
+//variáveis do caminho circular
+
+float circleRadius = 2.0f;
+float circleSpeed = g_SquarePathSpeed;
+float numHops = 8;
+
+//variáveis do caminho em losango
+float rhombusDiagZ = 14.0f;
+float rhombusDiagX = 8.0f;
+float rhombusSpeed = g_SquarePathSpeed;
 
 
 int main(int argc, char* argv[])
@@ -399,7 +416,7 @@ int main(int argc, char* argv[])
         // Note que, no sistema de coordenadas da câmera, os planos near e far
         // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
         float nearplane = -0.1f;  // Posição do "near plane"
-        float farplane  = -10.0f; // Posição do "far plane"
+        float farplane  = -60.0f; // Posição do "far plane"
 
         if (g_UsePerspectiveProjection)
         {
@@ -439,12 +456,12 @@ int main(int argc, char* argv[])
         #define RED_VELVET_SURFACE   4
         #define JADE_SURFACE         6
 
-        // Desenhamos o modelo da esfera
+        /*// Desenhamos o modelo da esfera
         model = Matrix_Translate(-2.0f,0.0f,0.0f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, SPHERE);
         glUniform1i(g_surface_type_uniform, RED_VELVET_SURFACE);
-        DrawVirtualObject("the_sphere");
+        DrawVirtualObject("the_sphere"); */
 
         // Desenhamos três coelhos com as cores verde, dourada e azul.
         const int bunny_surfaces[3] = {
@@ -455,22 +472,47 @@ int main(int argc, char* argv[])
 
         //Pegamos o tempo atual para fazer animação baseada em tempo real
         float current_time = (float)glfwGetTime();
-        
- 
-        for (int i = 0; i < bunnyNumber; ++i)
+        PathState hop_state;
+        //Desenhamos os coelhos da parte verde
+        for (int i = 0; i < squareBunnyNumber; ++i)
         {
             float bunny_time = current_time - i * bunnyTimeLag;
-            SquarePathState hop_state = ComputeSquarePathState(bunny_time, g_SquarePathSide, g_SquarePathSpeed);
+            hop_state = ComputeRectanglePathState(bunny_time, squareWidth, squareDepth, g_SquarePathSpeed);
             model = Matrix_Translate(hop_state.position.x, hop_state.height, hop_state.position.y) * Matrix_Rotate_Y(hop_state.yaw) * Matrix_Rotate_Z(hop_state.pitch);
             glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(g_object_id_uniform, BUNNY);
-            glUniform1i(g_surface_type_uniform, JADE_SURFACE);            
+            glUniform1i(g_surface_type_uniform, bunny_surfaces[0]);            
             //glUniform1i(g_surface_type_uniform, bunny_surfaces[i]);
             DrawVirtualObject("the_bunny");
         }
 
+        //Desenhamos os coelhos da parte amarela
+        for (int i = 0; i < rhombusBunnyNumber; ++i)
+        {
+            float bunny_time = current_time - i * bunnyTimeLag;
+            hop_state = ComputeRhombusPathState(bunny_time, rhombusDiagX, rhombusDiagZ, rhombusSpeed, g_HopHeight);
+            model = Matrix_Translate(hop_state.position.x, hop_state.height, hop_state.position.y) * Matrix_Rotate_Y(hop_state.yaw) * Matrix_Rotate_Z(hop_state.pitch);
+            glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(g_object_id_uniform, BUNNY);
+            glUniform1i(g_surface_type_uniform, bunny_surfaces[1]);            
+            //glUniform1i(g_surface_type_uniform, bunny_surfaces[i]);
+            DrawVirtualObject("the_bunny");
+        }
+        //Desenhamos os coelhos da parte azul
+        for (int i = 0; i < circleBunnyNumber; ++i)
+        {
+            float bunny_time = current_time - i * bunnyTimeLag;
+            hop_state = ComputeCirclePathState(bunny_time, circleRadius, circleSpeed, g_HopHeight, numHops);
+            model = Matrix_Translate(hop_state.position.x, hop_state.height, hop_state.position.y) * Matrix_Rotate_Y(hop_state.yaw) * Matrix_Rotate_Z(hop_state.pitch);
+            glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(g_object_id_uniform, BUNNY);
+            glUniform1i(g_surface_type_uniform, bunny_surfaces[2]);            
+            //glUniform1i(g_surface_type_uniform, bunny_surfaces[i]);
+            DrawVirtualObject("the_bunny");
+        }       
+
         // Desenhamos o plano do chão
-        model = Matrix_Translate(0.0f,-1.0f,0.0f) * Matrix_Scale(4.0f,1.0f,4.0f);
+        model = Matrix_Translate(0.0f,-1.0f,0.0f) * Matrix_Scale(12.0f,1.0f,12.0f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
@@ -1541,51 +1583,127 @@ void PrintObjModelInfo(ObjModel* model)
 
 //FUNÇÕES DEFINIDAS PELO ALUNO
 
-//Dado um valor no tempo, clacula o offset do coelho ao longo do rettângulo
-SquarePathState ComputeSquarePathState(float time, float L, float speed)
+PathState ComputeRectanglePathState(float time, float width, float depth, float speed)
 {
     glm::vec2 position, direction;
-    float perimeter = L*4.0f;
-    float t; //porcentagem (0 a 1) do lado atual do quadrado que o coelho já percorreu
+    float perimeter = 2.0f*width + 2.0f*depth;
+    float t;
 
     float d = fmodf(speed * time, perimeter);
     if (d < 0.0f) d += perimeter;
 
-    float half = L / 2.0f;
+    float halfW = width / 2.0f;
+    float halfD = depth / 2.0f;
 
-    if (d < L) 
+    float L; // comprimento do lado atual, usado para o cálculo do salto (t, height, pitch)
+
+    if (d < width)
     {
-        position = glm::vec2(-half + d, -half);
+        L = width;
+        position  = glm::vec2(-halfW + d, -halfD);
         direction = glm::vec2(1.0f, 0.0f);
-    } 
-    else if (d < 2*L) 
+    }
+    else if (d < width + depth)
     {
-        d -= L;
-        position = glm::vec2(half, -half + d);
+        d -= width;
+        L = depth;
+        position  = glm::vec2(halfW, -halfD + d);
         direction = glm::vec2(0.0f, 1.0f);
-    } 
-    else if (d < 3*L) 
+    }
+    else if (d < 2*width + depth)
     {
-        d -= 2*L;
-        position = glm::vec2(half - d, half);
+        d -= (width + depth);
+        L = width;
+        position  = glm::vec2(halfW - d, halfD);
         direction = glm::vec2(-1.0f, 0.0f);
-    } 
-    else 
+    }
+    else
     {
-        d -= 3*L;
-        position = glm::vec2(-half, half - d);
+        d -= (2*width + depth);
+        L = depth;
+        position  = glm::vec2(-halfW, halfD - d);
         direction = glm::vec2(0.0f, -1.0f);
     }
-    
-    t = d/L;
-    SquarePathState state;
-    state.position = position;
-    //O seno dá a proporção da subida na escala de 0 a hopheight, fazendo o movimento de arco.
-    state.height = g_HopHeight* sinf(pi*t);
-    printf("pi: %f\n", pi);
-    state.yaw = atan2f(direction.x, direction.y) + pi/2;
-    state.pitch    = atanf( (g_HopHeight * 3.141592f * cosf(3.141592f * t)) / L );  
 
+    t = d / L;
+    PathState state;
+    state.position = position;
+    state.height   = g_HopHeight * sinf(pi*t);
+    state.yaw      = atan2f(direction.x, direction.y) + pi/2;
+    state.pitch    = atanf( (g_HopHeight * pi * cosf(pi * t)) / L );
+
+    return state;
+}
+
+PathState ComputeCirclePathState(float time, float radius, float speed, float hopHeight, int numHops)
+{
+    float circumference = 2.0f * 3.141592f * radius;
+
+    // Ângulo percorrido, com velocidade linear constante: v = omega * radius
+    float omega = speed / radius;
+    float theta = omega * time;
+
+    // Posição no círculo (plano XZ)
+    glm::vec2 position = glm::vec2( radius * sinf(theta), radius * cosf(theta) );
+
+    // Direção do movimento = derivada da posição em relação ao tempo, normalizada
+    glm::vec2 direction = glm::vec2( cosf(theta), -sinf(theta) );
+
+    // Fração de progresso dentro do "segmento de salto" atual
+    float segment_length = circumference / numHops;
+    float d = fmodf(speed * time, segment_length);
+    if (d < 0.0f) d += segment_length;
+    float t = d / segment_length;
+
+    PathState state;
+    state.position = position;
+    state.yaw      = atan2f(direction.x, direction.y);
+    state.height   = hopHeight * sinf(3.141592f * t);
+    state.pitch    = atanf( (hopHeight * 3.141592f * cosf(3.141592f * t)) / segment_length );
+
+    return state;
+}
+
+
+PathState ComputeRhombusPathState(float time, float diagX, float diagZ, float speed, float hopHeight)
+{
+    // Vértices do losango: direita, frente (+Z), esquerda, trás (-Z)
+    glm::vec2 right = glm::vec2( diagX/2.0f, 0.0f );
+    glm::vec2 front = glm::vec2( 0.0f,       diagZ/2.0f );
+    glm::vec2 left  = glm::vec2(-diagX/2.0f, 0.0f );
+    glm::vec2 back  = glm::vec2( 0.0f,      -diagZ/2.0f );
+
+    glm::vec2 corners[4]     = { right, front, left, back };
+    float     side_lengths[4];
+    for (int i = 0; i < 4; ++i)
+        side_lengths[i] = glm::length(corners[(i+1)%4] - corners[i]);
+
+    float perimeter = side_lengths[0] + side_lengths[1] + side_lengths[2] + side_lengths[3];
+
+    float d = fmodf(speed * time, perimeter);
+    if (d < 0.0f) d += perimeter;
+
+    // Descobrimos em qual dos 4 lados estamos
+    int   side = 0;
+    float d_in_side = d;
+    while (d_in_side >= side_lengths[side]) {
+        d_in_side -= side_lengths[side];
+        side = (side + 1) % 4;
+    }
+
+    float L = side_lengths[side];
+    float t = d_in_side / L;
+
+    glm::vec2 a = corners[side];
+    glm::vec2 b = corners[(side + 1) % 4];
+    glm::vec2 position  = a + (b - a) * t;
+    glm::vec2 direction = glm::normalize(b - a);
+
+    PathState state;
+    state.position = position;
+    state.yaw      = atan2f(direction.x, direction.y);
+    state.height   = hopHeight * sinf(3.141592f * t);
+    state.pitch    = atanf( (hopHeight * 3.141592f * cosf(3.141592f * t)) / L );
 
     return state;
 }
