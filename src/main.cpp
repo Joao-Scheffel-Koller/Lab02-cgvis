@@ -506,6 +506,14 @@ int main(int argc, char* argv[])
             glUniform1i(g_surface_type_uniform, bunny_surfaces[1]);            
             //glUniform1i(g_surface_type_uniform, bunny_surfaces[i]);
             DrawVirtualObject("the_bunny");
+
+
+            glm::mat4 beret_model = model * Matrix_Translate(-0.7f, 0.7f, 0.2f) * Matrix_Scale(0.3f, 0.1f, 0.3f);
+
+            glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(beret_model));
+            glUniform1i(g_object_id_uniform, SPHERE);
+            glUniform1i(g_surface_type_uniform, RED_VELVET_SURFACE);
+            DrawVirtualObject("the_sphere");
         }
         //Desenhamos os coelhos da parte azul
         for (int i = 0; i < circleBunnyNumber; ++i)
@@ -518,6 +526,14 @@ int main(int argc, char* argv[])
             glUniform1i(g_surface_type_uniform, bunny_surfaces[2]);            
             //glUniform1i(g_surface_type_uniform, bunny_surfaces[i]);
             DrawVirtualObject("the_bunny");
+
+
+            glm::mat4 beret_model = model * Matrix_Translate(-0.7f, 0.7f, 0.2f) * Matrix_Scale(0.3f, 0.1f, 0.3f);
+
+            glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(beret_model));
+            glUniform1i(g_object_id_uniform, SPHERE);
+            glUniform1i(g_surface_type_uniform, RED_VELVET_SURFACE);
+            DrawVirtualObject("the_sphere");
         }       
 
         // Desenhamos o plano do chão
