@@ -245,7 +245,7 @@ int rhombusBunnyNumber = 14;
 ///ratio: 1,4
 float squareWidth = 15.0f;
 float squareDepth = 21.0f;
-float g_SquarePathSpeed = 1.0f; 
+float g_SquarePathSpeed = 4.0f; 
 float g_HopHeight = 1.4f;
 
 float pi = 3.14159265f;
@@ -256,13 +256,14 @@ float bunnyTimeLag = total_lap_time / squareBunnyNumber;
 
 //variáveis do caminho circular
 
-float circleRadius = 2.0f;
+float circleRadius = 2.5f;
 float circleSpeed = g_SquarePathSpeed;
 float numHops = 8;
 
 //variáveis do caminho em losango
-float rhombusDiagZ = 14.0f;
-float rhombusDiagX = 8.0f;
+//ratio: 1,75
+float rhombusDiagZ = 17.5f;
+float rhombusDiagX = 10.0f;
 float rhombusSpeed = g_SquarePathSpeed;
 
 
@@ -484,6 +485,14 @@ int main(int argc, char* argv[])
             glUniform1i(g_surface_type_uniform, bunny_surfaces[0]);            
             //glUniform1i(g_surface_type_uniform, bunny_surfaces[i]);
             DrawVirtualObject("the_bunny");
+
+            glm::mat4 beret_model = model * Matrix_Translate(-0.7f, 0.7f, 0.2f) * Matrix_Scale(0.3f, 0.1f, 0.3f);
+
+            glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(beret_model));
+            glUniform1i(g_object_id_uniform, SPHERE);
+            glUniform1i(g_surface_type_uniform, RED_VELVET_SURFACE);
+            DrawVirtualObject("the_sphere");
+            
         }
 
         //Desenhamos os coelhos da parte amarela
@@ -1657,7 +1666,7 @@ PathState ComputeCirclePathState(float time, float radius, float speed, float ho
 
     PathState state;
     state.position = position;
-    state.yaw      = atan2f(direction.x, direction.y);
+    state.yaw      = atan2f(direction.x, direction.y) + pi/2;
     state.height   = hopHeight * sinf(3.141592f * t);
     state.pitch    = atanf( (hopHeight * 3.141592f * cosf(3.141592f * t)) / segment_length );
 
@@ -1701,7 +1710,7 @@ PathState ComputeRhombusPathState(float time, float diagX, float diagZ, float sp
 
     PathState state;
     state.position = position;
-    state.yaw      = atan2f(direction.x, direction.y);
+    state.yaw      = atan2f(direction.x, direction.y) + pi/2;
     state.height   = hopHeight * sinf(3.141592f * t);
     state.pitch    = atanf( (hopHeight * 3.141592f * cosf(3.141592f * t)) / L );
 
