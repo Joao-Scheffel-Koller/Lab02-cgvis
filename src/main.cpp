@@ -1721,7 +1721,7 @@ PathState ComputeRhombusPathState(float time, float diagX, float diagZ, float sp
     PathState state;
     state.position = position;
     state.yaw      = atan2f(direction.x, direction.y) + pi/2;
-    state.height   = hopHeight * sinf(3.141592f * t);
+    state.height   = hopHeight * sinf(pi * t);
     state.pitch    = atanf( (hopHeight * 3.141592f * cosf(3.141592f * t)) / L );
 
     return state;
