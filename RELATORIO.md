@@ -46,7 +46,7 @@ Por fim, não se esqueça de aumentar o terreno e o far plane para cobrirem a á
 
 ## Principais dificuldades encontradas durante o desenvolvimento (formato livre)
 
-<mark>`<preencher>`</mark>
+<mark> Naturalmente, a primeira dificuldade que tive foi de compreender o funcionamento do código, já que essa foi a minha primeira vez lidando com openGL. Outra dificuldade marcante que enfrentei foi a de encontrar a solução correta para calcular a trajetória em formato de losango (A solução encontrada também serviria ao retângulo, já que ambos possuem mesma topologia), já que os lados do losango possuem ângulos entre si diferentes de 90 graus. Por fim, uma solução simples, mas cuja ideia eu demorei a ter foi a  de renderizar os coelhos em tempos defasados para gerar o efeito trem. Logo de início, meu código fazia com que os coelhos andassem sempre juntos pois eu não adicionava um lag entre eles.</mark>
 
 ## Você acha que conseguiu resolver o problema de forma adequada?
 
