@@ -155,9 +155,9 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 struct PathState
 {
     glm::vec2 position; 
-    float     height;   
-    float     yaw;      //referente à rotação do coelho (i.e. para onde ele está olhando)
-    float pitch; // Inclinação baseado na subida e descida do movimento de arco
+    float height;   
+    float yaw;      //referente à rotação do coelho (i.e. para onde ele está olhando)
+    float pitch; // Inclinação baseado na subida e descida do movimento de arco senoidal
 };
 
 
@@ -537,7 +537,7 @@ int main(int argc, char* argv[])
         }       
 
         // Desenhamos o plano do chão
-        model = Matrix_Translate(0.0f,-1.0f,0.0f) * Matrix_Scale(12.0f,1.0f,12.0f);
+        model = Matrix_Translate(0.0f,-1.0f,0.0f) * Matrix_Scale(16.0f,1.0f,16.0f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
@@ -1620,7 +1620,7 @@ PathState ComputeRectanglePathState(float time, float width, float depth, float 
     float halfW = width / 2.0f;
     float halfD = depth / 2.0f;
 
-    float L; // comprimento do lado atual, usado para o cálculo do salto (t, height, pitch)
+    float L;
 
     if (d < width)
     {
@@ -1664,17 +1664,13 @@ PathState ComputeCirclePathState(float time, float radius, float speed, float ho
 {
     float circumference = 2.0f * 3.141592f * radius;
 
-    // Ângulo percorrido, com velocidade linear constante: v = omega * radius
     float omega = speed / radius;
     float theta = omega * time;
 
-    // Posição no círculo (plano XZ)
     glm::vec2 position = glm::vec2( radius * sinf(theta), radius * cosf(theta) );
 
-    // Direção do movimento = derivada da posição em relação ao tempo, normalizada
     glm::vec2 direction = glm::vec2( cosf(theta), -sinf(theta) );
 
-    // Fração de progresso dentro do "segmento de salto" atual
     float segment_length = circumference / numHops;
     float d = fmodf(speed * time, segment_length);
     if (d < 0.0f) d += segment_length;
@@ -1692,7 +1688,6 @@ PathState ComputeCirclePathState(float time, float radius, float speed, float ho
 
 PathState ComputeRhombusPathState(float time, float diagX, float diagZ, float speed, float hopHeight)
 {
-    // Vértices do losango: direita, frente (+Z), esquerda, trás (-Z)
     glm::vec2 right = glm::vec2( diagX/2.0f, 0.0f );
     glm::vec2 front = glm::vec2( 0.0f,       diagZ/2.0f );
     glm::vec2 left  = glm::vec2(-diagX/2.0f, 0.0f );
@@ -1708,7 +1703,6 @@ PathState ComputeRhombusPathState(float time, float diagX, float diagZ, float sp
     float d = fmodf(speed * time, perimeter);
     if (d < 0.0f) d += perimeter;
 
-    // Descobrimos em qual dos 4 lados estamos
     int   side = 0;
     float d_in_side = d;
     while (d_in_side >= side_lengths[side]) {
