@@ -30,8 +30,7 @@
 > - Novamente, lembre-se que você *não pode utilizar ferramentas
 >   de IA para escrever este relatório*
 
-<mark>
-Crie um registro "PathState" que armazena altura, yaw, pitch, e posição 2d de um determinado coelho em um determinado momento no mapa em uma determinada trajetória. 
+<mark>Crie um registro "PathState" que armazena altura, yaw, pitch, e posição 2d de um determinado coelho em um determinado momento no mapa em uma determinada trajetória. 
 
 Após isso, crie variáveis globais para armazenar informações dos três diferentes caminhos que os coelhos podem seguir (e.g. raio do círculo). As variáveis e os valores exatos que utilizei estão [aqui](GLOBALS.md) 
 
@@ -41,8 +40,7 @@ Para renderizar os coelhos seguindo uma mesma trajetória defasados no tempo (ef
 
 Dentro do mesmo laço for que itera sobre cada coelho de cada grupo, desenhe a boina (que é o objeto de esfera distorcido com uma matriz scale para ficar mais "achatado") sobre a cabeça de cada animal: Basta utilizar a mesma matriz model do coelho como base, de modo que herde automaticamente posição, yaw e pitch daquele instante e aplicar uma matriz de translação (para que a boina não fique no centro do coelho, mas sobre a sua cabeça).
 
-Por fim, não se esqueça de aumentar o terreno e o far plane para cobrirem a área das trajetórias. Para o primeiro, basta aumentar os valores de x e z na matriz de scale que é utilizada para formar a matriz de modelagem do terreno quando este é renderizado. Já para o segundo, altere diretamente a variáavel farplane para um número maior desejado.
-</mark>
+Por fim, não se esqueça de aumentar o terreno e o far plane para cobrirem a área das trajetórias. Para o primeiro, basta aumentar os valores de x e z na matriz de scale que é utilizada para formar a matriz de modelagem do terreno quando este é renderizado. Já para o segundo, altere diretamente a variáavel farplane para um número maior desejado.</mark>
 
 ## Principais dificuldades encontradas durante o desenvolvimento (formato livre)
 
